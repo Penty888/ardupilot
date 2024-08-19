@@ -432,6 +432,8 @@ void Rover::update_logging2(void)
  */
 void Rover::one_second_loop(void)
 {
+    static bool was_armed = false; // Variabile per tenere traccia dello stato di armamento precedente
+
     set_control_channels();
 
     // cope with changes to aux functions
@@ -442,6 +444,16 @@ void Rover::one_second_loop(void)
     AP_Notify::flags.pre_arm_gps_check = true;
     AP_Notify::flags.armed = arming.is_armed();
     AP_Notify::flags.flying = hal.util->get_soft_armed();
+
+    //Controlliamo se viene armato il rover e nel caso sia così mandiamo un messaggio
+    // Verifica se il rover è appena stato armato
+    if (arming.is_armed() && !was_armed) {
+        // Invia un messaggio alla GCS
+        gcs().send_text(MAV_SEVERITY_INFO, "Rover armed successfully!");
+    }
+
+    // Aggiorna lo stato di armamento precedente
+    was_armed = arming.is_armed();
 
     // cope with changes to mavlink system ID
     mavlink_system.sysid = g.sysid_this_mav;
